@@ -1,20 +1,11 @@
 # JawnPythias
 # date:03/03/2024
 
-# »ğ¾¯ºô½Ğ·ÖÎö
-'''
-2018ÄêµÄÄÄ¸öÔÂ·İÓĞ×î¸ßµÄ»ğ¾¯
-San FranciscoµÄÄÄ¸öneighborhoodÔÚ2018Äê·¢ÉúµÄ»ğÔÖ´ÎÊı×î¶à£¿
-San FranciscoµÄÄÄ¸öneighborhoodÔÚ2018ÄêÏìÓ¦×îÂı£¿
-2018ÄêµÄÄÄÒ»ÖÜµÄ»ğ¾¯´ÎÊı×î¶à
-Êı¾İ¼¯ÖĞÈÎÒâÖµÖ®¼äÓĞ¹ØÁª£¨correlation£©Âğ£¿
-ÊµÏÖÊ¹ÓÃparquest´æ´¢²¢¶ÁÈ¡
-'''
-
-# 1.¼ÓÔØÊı¾İ¼¯
 # python
+import datetime
+
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, expr, concat, countDistinct, to_timestamp, year, count
+from pyspark.sql.functions import *
 from pyspark.sql.types import StructType, ArrayType, StringType, StructField, IntegerType, BooleanType, FloatType
 
 # Driver
@@ -56,3 +47,69 @@ fire_schema = StructType([StructField("CallNumber", IntegerType(), True),
                          )
 
 df = spark.read.option('header', True).schema(fire_schema).csv('dataset/sf-fire-calls.txt')
+
+# 1.æ‰“å°2018å¹´ä»½æ‰€æœ‰çš„CallTypeï¼Œå¹¶å»é‡
+# df.withColumn('IncidentDate', to_timestamp('CallDate', 'MM/dd/yy')) \
+#     .drop('CallDate') \
+#     .withColumn('year', year('IncidentDate')) \
+#     .select('year', 'CallType') \
+#     .where("year == '2018'") \
+#     .distinct() \
+#     .select('CallType').show()
+
+# 2.2018å¹´çš„å“ªä¸ªæœˆä»½æœ‰æœ€é«˜çš„ç«è­¦
+# df.withColumn('IncidentDate', to_timestamp('CallDate', 'MM/dd/yy')) \
+#         .withColumn('year', year('IncidentDate'))\
+#         .withColumn('month', month("IncidentDate"))\
+#         .select('year', 'month')\
+#         .where("year == '2018'")\
+#         .groupby('month')\
+#         .agg(count('month').alias('count'))\
+#         .orderBy(col('count').desc()).show(truncate=False)
+
+# 3.San Franciscoçš„å“ªä¸ªneighborhoodåœ¨2018å¹´å‘ç”Ÿçš„ç«ç¾æ¬¡æ•°æœ€å¤šï¼Ÿ
+# df.withColumn('IncidentDate', to_timestamp('CallDate', 'MM/dd/yy')) \
+#     .withColumn('year', year('IncidentDate'))\
+#     .select('year', 'City', 'Neighborhood')\
+#     .where("year == '2018'")\
+#     .where("City == 'San Francisco'")\
+#     .groupby('Neighborhood')\
+#     .agg(count('Neighborhood').alias('count'))\
+#     .orderBy(col('count').desc()).show(truncate=False)
+
+# 4.San Franciscoçš„å“ªä¸ªneighborhoodåœ¨2018å¹´å“åº”æœ€æ…¢ï¼Ÿ
+# df.withColumn('IncidentDate', to_timestamp('CallDate', 'MM/dd/yy')) \
+#     .withColumn('year', year('IncidentDate'))\
+#     .select('year', 'City', 'Neighborhood', 'Delay')\
+#     .where("year == '2018'")\
+#     .where("City == 'San Francisco'")\
+#     .groupby('Neighborhood')\
+#     .agg(sum('Delay').alias('SumDelay'))\
+#     .orderBy(col('SumDelay').desc()).show(truncate=False)
+
+# 5.2018å¹´çš„å“ªä¸€å‘¨çš„ç«è­¦æ¬¡æ•°æœ€å¤š
+# df.withColumn('IncidentDate', to_timestamp('CallDate', 'MM/dd/yy')) \
+#     .withColumn('year', year('IncidentDate'))\
+#     .where("year == '2018'")\
+#     .withColumn('WeekOfYear', weekofyear('IncidentDate'))\
+#     .select('year', 'WeekOfYear')\
+#     .groupby('WeekOfYear')\
+#     .agg(count('WeekOfYear').alias('count'))\
+#     .orderBy(col('count').desc()).show(truncate=False)
+
+# 6.æ•°æ®é›†ä¸­ä»»æ„å€¼ä¹‹é—´æœ‰å…³è”ï¼ˆcorrelationï¼‰å—ï¼Ÿ
+# cor_df = df.select('CallNumber', 'IncidentNumber', 'Zipcode', 'FinalPriority',
+#                    'NumAlarms', 'UnitSequenceInCallDispatch', 'Delay')
+# cor_list = list()
+# cor_list.append(cor_df.stat.corr('UnitSequenceInCallDispatch', 'Delay'))
+# cor_list.append(cor_df.stat.corr('FinalPriority', 'Delay'))
+# cor_list.append(cor_df.stat.corr('UnitSequenceInCallDispatch', 'NumAlarms'))
+# cor_list.append(cor_df.stat.corr('IncidentNumber', 'Delay'))
+# cor_list.append(cor_df.stat.corr('IncidentNumber', 'Zipcode'))
+# print(cor_list)
+
+# 7.å®ç°ä½¿ç”¨parquestå­˜å‚¨å¹¶è¯»å–
+text_df = spark.read.text("dataset/sf-fire-calls.txt")
+processed_df = text_df.selectExpr("split(value, ',') as data").select("data")
+processed_df.write.parquet("dataset/output.parquest")
+spark.stop()
