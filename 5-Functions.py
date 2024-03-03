@@ -51,3 +51,20 @@ df.orderBy(col('name').desc()).show()
 df.orderBy(col('name').asc()).show()
 
 df.sort(col('name').desc()).show()
+
+# 7.去重
+rdd = spark.sparkContext.parallelize([("jayChou", 41), ("burukeyou", 23), ("burukeyouClone", 23)])
+df = spark.createDataFrame(rdd.map(lambda row: Row(name=row[0], age=row[1])))
+df.dropDuplicates(['age']).show()
+df.dropDuplicates(['name', 'age']).show()
+
+# distinct
+rdd = spark.sparkContext.parallelize([('tom', 20), ('jack', 18), ('tom', 21)])
+df = rdd.toDF(['name', 'age'])
+# df.select('tom').distinct().show()
+
+# limit 限制结果集数量
+rdd = spark.sparkContext.parallelize([('tom', 20), ('jack', 18), ('tom', 21)])
+df = rdd.toDF(['name', 'age'])
+df.limit(1).show()
+
