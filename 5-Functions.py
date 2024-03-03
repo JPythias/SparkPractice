@@ -3,6 +3,7 @@
 
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
+from pyspark.sql.types import Row
 
 spark = SparkSession.builder\
     .appName("HelloSpark")\
@@ -44,3 +45,9 @@ print(dfs[1].count())
 
 # 6.orderBy
 rdd = spark.sparkContext.parallelize([("jayChou", 41), ("burukeyou", 23)])
+df = spark.createDataFrame(rdd.map(lambda row: Row(name=row[0], age=row[1])))
+
+df.orderBy(col('name').desc()).show()
+df.orderBy(col('name').asc()).show()
+
+df.sort(col('name').desc()).show()
