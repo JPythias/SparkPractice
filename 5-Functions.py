@@ -1,0 +1,46 @@
+# JawnPythias
+# date:03/03/2024
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col
+
+spark = SparkSession.builder\
+    .appName("HelloSpark")\
+    .master("local")\
+    .getOrCreate()
+
+# 1.map
+# RDD里的函数
+
+rdd = spark.sparkContext.parallelize([1, 2, 3, 4])
+result = rdd.map(lambda x : x * x)
+
+# collect rdd -> list
+print(result.collect())
+
+# 2.flatMap
+# Hello World 单词计数
+
+# 3.filter
+rdd = spark.sparkContext.parallelize([('tom', 20), ('jack', 18)])
+df = rdd.toDF(['name', 'age'])
+
+df.filter(col('age') < 20).show()
+df.where(col('age') < 18).show()
+
+# 4.randomSplit
+# randomSplit 会按照传入的权重随机将一个 Dataset 分为多个 Dataset, 传入 randomSplit 的数组有多少个权重, 最终就会生成多少个 Dataset, 这些权重的加倍和应该为 1, 否则将被标准化
+rdd = spark.sparkContext.parallelize([(i, 'fake') for i in range(1, 100)])
+
+print(rdd.collect())
+df = rdd.toDF(['num', 'data'])
+
+dfs = df.randomSplit([0.7, 0.3])
+print(dfs[0].count())
+print(dfs[1].count())
+
+# 5.sample
+# sample会在dataset中随机抽样
+
+# 6.orderBy
+rdd = spark.sparkContext.parallelize([("jayChou", 41), ("burukeyou", 23)])
