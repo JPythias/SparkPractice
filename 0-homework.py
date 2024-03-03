@@ -107,9 +107,9 @@ df = spark.read.option('header', True).schema(fire_schema).csv('dataset/sf-fire-
 # cor_list.append(cor_df.stat.corr('IncidentNumber', 'Delay'))
 # cor_list.append(cor_df.stat.corr('IncidentNumber', 'Zipcode'))
 # print(cor_list)
-
+#
 # 7.实现使用parquest存储并读取
-text_df = spark.read.text("dataset/sf-fire-calls.txt")
-processed_df = text_df.selectExpr("split(value, ',') as data").select("data")
-processed_df.write.parquet("dataset/output.parquest")
-spark.stop()
+# text_df = spark.read.text("dataset/sf-fire-calls.txt")
+# processed_df = text_df.selectExpr("split(value, ',') as data").select("data")
+# processed_df.write.parquet("dataset/output.parquest")
+# spark.stop()
